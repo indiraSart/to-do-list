@@ -1,0 +1,9 @@
+body {
+  background-color: white;
+}
+
+.indexContainer {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
