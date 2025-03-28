@@ -54,7 +54,7 @@ function showRegisterForm() {
 }
 
 function showAddTaskForm() {
-    addReindeerForm.classList.toggle('d-none');
+    addTaskForm.classList.toggle('d-none');
 }
 
 // Auth Functions
