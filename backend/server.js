@@ -3,8 +3,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-
+const auth = require('./routes/auth');
 const app = express();
+
+// Middleware
+app.set("view engine", "ejs");
 
 
 app.use(cors({
@@ -12,8 +15,11 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
+app.use(express.static('public'))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/', auth);
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/to-do-list', {
     useNewUrlParser: true,
@@ -43,6 +49,10 @@ app.use((err, req, res, next) => {
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../frontend')));
 }
+
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
 // Basic route for testing
 app.get('/api/test', (req, res) => {
