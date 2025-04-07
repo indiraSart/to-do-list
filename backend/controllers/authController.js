@@ -2,6 +2,8 @@ const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
+
+
 exports.register = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -37,44 +39,36 @@ exports.register = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.login = async (req, res) => {
+    const { email, password } = req.body;
+
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array());
-            return res.render('login', { errors: errors.array() });
-        }
-
-        const { email, password } = req.body;
-        console.log('Login attempt for email:', email);
-
-        // Check if user exists
+        // Find the user by email
         const user = await User.findOne({ email });
         if (!user) {
-            console.log('User not found:', email);
-            return res.render('login', { error: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Validate password
+        // Compare the provided password with the hashed password in the database
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            console.log('Invalid password for user:', email);
-            return res.render('login', { error: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Create JWT token
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET || 'your-secret-key',
-            { expiresIn: '1d' }
-        );
+        // Generate a JWT token
+        const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        console.log('Login successful for user:', email);
-        // Redirect to a dashboard or home page after successful login
-        res.redirect('/dashboard');
+        // Set the token as a cookie
+        res.cookie('token', token, { httpOnly: true });
+
+        // Respond with a success message
+        return res.json({ message: 'Login successful' });
     } catch (err) {
-        console.error('Login error:', err);
-        res.render('login', { error: 'Server error during login' });
+        console.error('Error during login:', err);
+        return res.status(500).json({ message: 'Server error' });
     }
 };
-
